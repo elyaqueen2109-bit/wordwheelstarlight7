@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Adventure Sports Word Wheel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: radial-gradient(circle at 20% 10%, #3b2a6b 0%, #1a1038 60%, #0b0620 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed; top: -20%; left: -10%;
+            width: 60%; height: 60%;
+            background: radial-gradient(circle, rgba(255, 150, 210, 0.35), transparent 70%);
+            filter: blur(70px); z-index: -2;
+        }
+        body::after {
+            content: "";
+            position: fixed; bottom: -20%; right: -10%;
+            width: 60%; height: 60%;
+            background: radial-gradient(circle, rgba(150, 200, 255, 0.35), transparent 70%);
+            filter: blur(70px); z-index: -2;
+        }
+
+        .game-container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: linear-gradient(160deg, rgba(45, 32, 90, 0.95), rgba(20, 12, 50, 0.95));
+            backdrop-filter: blur(8px);
+            border-radius: 55px;
+            box-shadow:
+                0 25px 60px rgba(0,0,0,0.6),
+                0 0 0 2px rgba(255, 170, 220, 0.35),
+                0 0 50px rgba(180, 140, 255, 0.35);
+            overflow: hidden;
+            padding-bottom: 25px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff9ed8 0%, #b18cff 50%, #9ed8ff 100%);
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 1.8rem;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(255,255,255,0.6), 0 0 22px rgba(255, 150, 220, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .sub {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 40px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 10px;
+            color: #fff;
+        }
+
+        .progress-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 25px 0;
+        }
+        .dots-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(180, 220, 255, 0.4);
+            transition: all 0.3s;
+        }
+        .dot.active {
+            background: linear-gradient(160deg, #ff9ed8, #b18cff);
+            box-shadow: 0 0 14px rgba(255, 150, 220, 0.9);
+            transform: scale(1.3);
+            border-color: #fff;
+        }
+        .dot.solved {
+            background: linear-gradient(160deg, #7bffb0, #2ecc71);
+            box-shadow: 0 0 14px rgba(120, 255, 170, 0.9);
+            border-color: #fff;
+        }
+
+        .score-text {
+            background: linear-gradient(135deg, #9ed8ff, #c8b8ff);
+            padding: 8px 22px;
+            border-radius: 40px;
+            color: #22134a;
+            font-weight: 700;
+            font-size: 1rem;
+            box-shadow: 0 0 20px rgba(180, 200, 255, 0.6);
+        }
+
+        .current-word {
+            margin: 20px 25px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-height: 60px;
+        }
+        .letter-cell {
+            width: 46px;
+            height: 56px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            border-bottom: 4px solid rgba(180, 220, 255, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.6rem;
+            color: #fff;
+            text-transform: uppercase;
+            transition: all 0.25s;
+        }
+        .letter-cell.filled {
+            background: linear-gradient(160deg, #ff9ed8, #b18cff);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(255, 150, 220, 0.75);
+            transform: scale(1.08);
+            border-color: #fff;
+        }
+
+        .wheel-area {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 25px 10px;
+            position: relative;
+            min-height: 420px;
+        }
+        .wheel {
+            position: relative;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            background:
+                radial-gradient(circle, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.03) 60%, transparent 70%),
+                linear-gradient(160deg, #4a2878, #2a1548);
+            border: 3px solid rgba(180, 220, 255, 0.5);
+            box-shadow:
+                inset 0 0 60px rgba(180, 140, 255, 0.35),
+                0 0 40px rgba(255, 150, 220, 0.4);
+        }
+        .wheel-btn {
+            position: absolute;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.75);
+            background: linear-gradient(160deg, #ff9ed8, #b18cff);
+            color: #fff;
+            font-family: inherit;
+            font-weight: 700;
+            font-size: 1.3rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            box-shadow:
+                0 0 18px rgba(255, 150, 220, 0.7),
+                inset 0 -4px 0 rgba(0,0,0,0.15);
+            transition: transform 0.12s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .wheel-btn:hover:not(:disabled) {
+            transform: scale(1.1);
+            box-shadow: 0 0 26px rgba(255, 150, 220, 1), inset 0 -4px 0 rgba(0,0,0,0.15);
+        }
+        .wheel-btn:active:not(:disabled) { transform: scale(0.95); }
+        .wheel-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+        .wheel-btn.vowel {
+            background: linear-gradient(160deg, #9ed8ff, #2b86ff);
+            box-shadow: 0 0 18px rgba(150, 200, 255, 0.7), inset 0 -4px 0 rgba(0,0,0,0.15);
+        }
+
+        .wheel-center {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border-radius: 50%;
+            background: linear-gradient(160deg, rgba(255,255,255,0.98), rgba(240, 235, 255, 0.98));
+            border: 4px solid rgba(255, 170, 220, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 35px rgba(255, 150, 220, 0.8);
+            overflow: hidden;
+            padding: 22px;
+            text-align: center;
+            transition: opacity 0.3s;
+        }
+        .wheel-center.changing {
+            animation: cardFlip 0.6s ease-in-out;
+        }
+        @keyframes cardFlip {
+            0% { transform: translate(-50%, -50%) scale(1) rotateY(0); }
+            50% { transform: translate(-50%, -50%) scale(0.7) rotateY(90deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotateY(0); }
+        }
+        .wheel-center .definition {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #22134a;
+            line-height: 1.35;
+            text-align: center;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            padding: 0 20px 10px;
+            flex-wrap: wrap;
+        }
+        .ctrl-btn {
+            background: linear-gradient(135deg, #9ed8ff, #c8b8ff);
+            border: none;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 12px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            color: #22134a;
+            box-shadow: 0 0 18px rgba(180, 200, 255, 0.65), 0 4px 0 rgba(100, 80, 180, 0.5);
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .ctrl-btn:active { transform: translateY(2px); }
+        .ctrl-btn.warn {
+            background: linear-gradient(135deg, #ff9eb0, #ff5c7a);
+            color: #fff;
+            box-shadow: 0 0 18px rgba(255, 140, 170, 0.7), 0 4px 0 rgba(160, 40, 70, 0.6);
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #ffc2e8;
+            min-height: 30px;
+            margin: 5px 25px 0;
+            text-shadow: 0 0 14px rgba(255, 170, 220, 0.8);
+            letter-spacing: 0.5px;
+        }
+        .feedback.good { color: #b1ffc9; text-shadow: 0 0 14px rgba(120, 255, 170, 0.9); }
+        .feedback.bad  { color: #ffb1c9; text-shadow: 0 0 14px rgba(255, 140, 170, 0.9); }
+
+        .final-screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 25px;
+            gap: 20px;
+        }
+        .final-screen.visible { display: flex; }
+        .final-emoji { font-size: 5rem; animation: bounce 1s ease-in-out infinite; }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-15px); }
+        }
+        .final-title {
+            color: #ffc2e8;
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 0 0 18px rgba(255, 170, 220, 0.9);
+        }
+        .restart-btn {
+            background: linear-gradient(135deg, #9ed8ff, #c8b8ff);
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 14px 38px;
+            border-radius: 50px;
+            cursor: pointer;
+            color: #22134a;
+            box-shadow: 0 0 24px rgba(180, 200, 255, 0.8), 0 5px 0 rgba(100, 80, 180, 0.5);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .restart-btn:active { transform: translateY(2px); }
+
+        @media (max-width: 680px) {
+            .header h1 { font-size: 1.3rem; }
+            .wheel { width: 300px; height: 300px; }
+            .wheel-btn { width: 46px; height: 46px; font-size: 1.1rem; }
+            .wheel-center { width: 170px; height: 170px; padding: 14px; }
+            .wheel-center .definition { font-size: 0.75rem; }
+            .letter-cell { width: 36px; height: 46px; font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+<div class="game-container">
+    <div class="header">
+        <h1><i class="fas fa-mountain"></i> Adventure Sports <i class="fas fa-parachute-box"></i></h1>
+        <div class="sub">Read the definition → tap the letters in order</div>
+    </div>
+
+    <div class="progress-area">
+        <div class="dots-row" id="dotsRow"></div>
+        <div class="score-text" id="scoreText">Solved: 0 / 9</div>
+    </div>
+
+    <div id="gameBlock">
+        <div class="current-word" id="currentWord"></div>
+
+        <div class="wheel-area">
+            <div class="wheel" id="wheel">
+                <div class="wheel-center" id="wheelCenter"></div>
+            </div>
+        </div>
+
+        <div class="feedback" id="feedback"></div>
+
+        <div class="controls">
+            <button class="ctrl-btn warn" id="clearBtn">
+                <i class="fas fa-eraser"></i> Clear
+            </button>
+            <button class="ctrl-btn" id="skipBtn">
+                <i class="fas fa-forward"></i> Skip
+            </button>
+        </div>
+    </div>
+
+    <div class="final-screen" id="finalScreen">
+        <div class="final-emoji">🏆</div>
+        <div class="final-title">All sports found!</div>
+        <div class="restart-btn" id="restartBtn" style="cursor:pointer;">
+            <i class="fas fa-rotate-right"></i> Play again
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================================
+    // 🏔️ СПОРТЫ И ИХ ОПРЕДЕЛЕНИЯ (Module 1e, ex. 1a) — 9 слов
+    // ============================================================
+    const WORDS = [
+        { word: "mountain biking", definition: "Riding a special bike up and down mountains." },
+        { word: "street luge",     definition: "Riding a long board down a steep street, lying on your back." },
+        { word: "motocross",       definition: "Racing on a four-wheeled motorbike over rough ground." },
+        { word: "speed skiing",    definition: "Skiing down a mountain as fast as possible." },
+        { word: "windsurfing",     definition: "Riding waves on a board with a sail." },
+        { word: "freediving",      definition: "Diving deep into the sea without an air tank." },
+        { word: "paragliding",     definition: "Flying through the air with a special parachute." },
+        { word: "rock climbing",   definition: "Climbing up steep rocks using your hands and feet." },
+        { word: "white-water rafting", definition: "Going down a fast river in a small rubber boat." }
+    ];
+
+    let order = [];
+    let currentIndex = 0;
+    let currentInput = [];
+    let solvedCount = 0;
+
+    const wheel = document.getElementById("wheel");
+    const wheelCenter = document.getElementById("wheelCenter");
+    const currentWordDiv = document.getElementById("currentWord");
+    const dotsRow = document.getElementById("dotsRow");
+    const scoreText = document.getElementById("scoreText");
+    const feedback = document.getElementById("feedback");
+    const clearBtn = document.getElementById("clearBtn");
+    const skipBtn = document.getElementById("skipBtn");
+    const gameBlock = document.getElementById("gameBlock");
+    const finalScreen = document.getElementById("finalScreen");
+    const restartBtn = document.getElementById("restartBtn");
+
+    // ============ АУДИО ============
+    let audioCtx = null;
+    function getAudioCtx() {
+        if (!audioCtx) {
+            try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+            catch (e) { return null; }
+        }
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        return audioCtx;
+    }
+
+    function playClickSound() {
+        const ctx = getAudioCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.exponentialRampToValueAtTime(1100, now + 0.06);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.10, now + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.12);
+    }
+
+    function playCorrectSound() {
+        const ctx = getAudioCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        [660, 880, 1320].forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, now + i * 0.09);
+            const gain = ctx.createGain();
+            gain.gain.setValueAtTime(0.0001, now + i * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.15, now + i * 0.09 + 0.02);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + i * 0.09 + 0.2);
+            osc.connect(gain).connect(ctx.destination);
+            osc.start(now + i * 0.09);
+            osc.stop(now + i * 0.09 + 0.22);
+        });
+    }
+
+    function playWrongSound() {
+        const ctx = getAudioCtx(); if (!ctx) return;
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(300, now);
+        osc.frequency.exponentialRampToValueAtTime(150, now + 0.22);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.0001, now);
+        gain.gain.exponentialRampToValueAtTime(0.15, now + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(now); osc.stop(now + 0.28);
+    }
+
+    function speakWord(text) {
+        if (!text || !window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "en-GB";
+        u.rate = 0.85;
+        const voices = window.speechSynthesis.getVoices();
+        const gb = voices.find(v => v.lang === "en-GB") ||
+                   voices.find(v => v.lang.startsWith("en-GB")) ||
+                   voices.find(v => v.lang === "en_GB");
+        if (gb) u.voice = gb;
+        window.speechSynthesis.speak(u);
+    }
+    if (window.speechSynthesis) {
+        window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+    }
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    // ============ ПРОГРЕСС-ТОЧКИ ============
+    function buildDots() {
+        dotsRow.innerHTML = "";
+        for (let i = 0; i < WORDS.length; i++) {
+            const d = document.createElement("div");
+            d.className = "dot";
+            d.dataset.index = i;
+            dotsRow.appendChild(d);
+        }
+        updateDots();
+    }
+
+    function updateDots() {
+        const dotEls = dotsRow.querySelectorAll(".dot");
+        dotEls.forEach((d, i) => {
+            d.classList.toggle("active", i === currentIndex);
+            d.classList.toggle("solved", i < solvedCount);
+        });
+    }
+
+    // ============ КОЛЕСО ============
+    function buildWheel(word) {
+        const cleanWord = word.replace(/\s+/g, "").toUpperCase();
+        const letters = cleanWord.split("");
+        const noise = "AEIOULNRST".split("");
+        const totalButtons = Math.max(letters.length + 3, 12);
+        while (letters.length < totalButtons) {
+            letters.push(noise[Math.floor(Math.random() * noise.length)]);
+        }
+        const pool = shuffle(letters);
+
+        wheel.querySelectorAll(".wheel-btn").forEach(b => b.remove());
+
+        const total = pool.length;
+        const radius = 145;
+        const centerX = 190;
+        const centerY = 190;
+
+        pool.forEach((letter, i) => {
+            const angle = (i / total) * Math.PI * 2 - Math.PI / 2;
+            const x = centerX + radius * Math.cos(angle) - 28;
+            const y = centerY + radius * Math.sin(angle) - 28;
+
+            const btn = document.createElement("button");
+            btn.className = "wheel-btn";
+            if ("AEIOU".includes(letter)) btn.classList.add("vowel");
+            btn.textContent = letter;
+            btn.style.left = x + "px";
+            btn.style.top = y + "px";
+            btn.addEventListener("click", () => onLetterClick(letter, btn));
+            wheel.appendChild(btn);
+        });
+    }
+
+    function onLetterClick(letter, btn) {
+        const item = WORDS[order[currentIndex]];
+        const target = item.word.replace(/\s+/g, "").toUpperCase();
+        const expectedPos = currentInput.length;
+        if (expectedPos >= target.length) return;
+
+        if (target[expectedPos] === letter) {
+            playClickSound();
+            currentInput.push(letter);
+            btn.disabled = true;
+            updateWordCells();
+            if (currentInput.length === target.length) {
+                setTimeout(() => onWordSolved(), 250);
+            }
+        } else {
+            playWrongSound();
+            btn.style.animation = "shake 0.3s";
+            setTimeout(() => { btn.style.animation = ""; }, 300);
+        }
+    }
+
+    function updateWordCells() {
+        const cells = currentWordDiv.querySelectorAll(".letter-cell");
+        cells.forEach((c, i) => {
+            if (currentInput[i]) {
+                c.textContent = currentInput[i];
+                c.classList.add("filled");
+            } else {
+                c.textContent = "";
+                c.classList.remove("filled");
+            }
+        });
+    }
+
+    function onWordSolved() {
+        const item = WORDS[order[currentIndex]];
+        solvedCount++;
+        scoreText.textContent = `Solved: ${solvedCount} / ${WORDS.length}`;
+        feedback.textContent = `✅ ${item.word} — well done!`;
+        feedback.className = "feedback good";
+
+        playCorrectSound();
+        speakWord(item.word);
+        updateDots();
+
+        currentWordDiv.querySelectorAll(".letter-cell").forEach(c => {
+            c.style.background = "linear-gradient(160deg, #7bffb0, #2ecc71)";
+            c.style.color = "#06200e";
+            c.style.boxShadow = "0 0 18px rgba(120, 255, 170, 0.9)";
+        });
+
+        setTimeout(() => {
+            if (solvedCount === WORDS.length) {
+                showFinal();
+            } else {
+                currentIndex++;
+                resetRound();
+            }
+        }, 1800);
+    }
+
+    function resetRound() {
+        currentInput = [];
+        const item = WORDS[order[currentIndex]];
+
+        const cleanWord = item.word.replace(/\s+/g, "");
+        currentWordDiv.innerHTML = cleanWord.split("").map(() =>
+            `<div class="letter-cell"></div>`
+        ).join("");
+
+        wheelCenter.classList.add("changing");
+        setTimeout(() => {
+            wheelCenter.innerHTML = `
+                <div class="definition">${item.definition}</div>
+            `;
+            wheelCenter.classList.remove("changing");
+        }, 300);
+
+        buildWheel(item.word);
+        feedback.textContent = "";
+        feedback.className = "feedback";
+        updateDots();
+    }
+
+    clearBtn.addEventListener("click", () => {
+        if (currentInput.length === 0) return;
+        wheel.querySelectorAll(".wheel-btn").forEach(b => b.disabled = false);
+        currentInput = [];
+        updateWordCells();
+        feedback.textContent = "Cleared.";
+        feedback.className = "feedback";
+    });
+
+    skipBtn.addEventListener("click", () => {
+        if (solvedCount === WORDS.length) return;
+        if (currentIndex < WORDS.length - 1) {
+            currentIndex++;
+            resetRound();
+        } else {
+            currentIndex = 0;
+            resetRound();
+        }
+    });
+
+    function showFinal() {
+        gameBlock.style.display = "none";
+        finalScreen.classList.add("visible");
+        speakWord("Great job! All sports found!");
+    }
+
+    restartBtn.addEventListener("click", () => {
+        currentIndex = 0;
+        solvedCount = 0;
+        currentInput = [];
+        order = shuffle([...Array(WORDS.length).keys()]);
+        scoreText.textContent = `Solved: 0 / ${WORDS.length}`;
+        finalScreen.classList.remove("visible");
+        gameBlock.style.display = "block";
+        buildDots();
+        resetRound();
+    });
+
+    (function init() {
+        order = shuffle([...Array(WORDS.length).keys()]);
+        buildDots();
+        resetRound();
+    })();
+
+    const style = document.createElement("style");
+    style.textContent = `
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-6px); }
+            75% { transform: translateX(6px); }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+</body>
+</html>
